@@ -14,8 +14,8 @@ If you use Wally, add both to your `wally.toml`:
 
 ```toml
 [dependencies]
-Lunora = "chroma-hade/lunora@1.0.0"
-Hitbox = "chroma-hade/hitbox@1.0.0"
+Lunora = "chroma-hade/lunora@1.0.3"
+Hitbox = "chroma-hade/hitbox@1.0.1"
 ```
 
 ## Setting it up
@@ -26,6 +26,7 @@ Hitbox comes with a service and a controller. Hand them to Lunora next to your o
 -- server
 Lunora.AddModules(ReplicatedStorage.Packages.Hitbox.Server)
 Lunora.AddModules(ServerStorage.Services)
+
 Lunora.Start()
 ```
 
@@ -33,13 +34,14 @@ Lunora.Start()
 -- client
 Lunora.AddModules(ReplicatedStorage.Packages.Hitbox.Client)
 Lunora.AddModules(script.Parent.Controllers)
+
 Lunora.Start()
 ```
 
 With Wally, `Packages.Hitbox` is just a link, so the folders sit in `_Index` instead:
 
 ```lua
-local HitboxFolder = ReplicatedStorage.Packages._Index["chroma-hade_hitbox@1.0.0"].hitbox
+local HitboxFolder = ReplicatedStorage.Packages._Index["chroma-hade_hitbox@1.0.1"].hitbox
 Lunora.AddModules(HitboxFolder.Server)
 ```
 
@@ -88,7 +90,7 @@ Hitbox.SetFilter({ workspace.Characters })
 
 ## How the server checks
 
-The client tells the server who it hit and where the attacker was standing. The server only believes that spot if the attacker could have gotten there in time, based on their `WalkSpeed` and the ping. Standing still, that's barely a few studs!
+The client tells the server who it hit and where the attacker was standing. The server only believes that spot if the attacker could have gotten there in time, based on their `WalkSpeed` and the ping. Nobody gets to swing from a spot they couldn't have walked to!
 
 If your game moves characters some other way, like a dash, tell Hitbox how fast:
 
@@ -111,6 +113,7 @@ Set a `VisualHitbox` attribute to `true` on `ReplicatedStorage`. Client hitboxes
 | `Hitbox.new(Data)` | Makes a hitbox and starts it |
 | `hitbox:OnHit(Function)` | Runs for each victim that got hit |
 | `hitbox:OnBlocked(Function)` | Runs for each victim your resolver blocked |
+| `hitbox:ResetVictims()` | Lets everyone it already hit get hit again |
 | `hitbox:Destroy()` | Stops it early |
 | `Hitbox.SetResolver(Function)` | Decides hit, blocked or ignored |
 | `Hitbox.SetFilter(Folders)` | Only check inside these folders |

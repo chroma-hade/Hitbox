@@ -99,7 +99,6 @@ local function GetDistanceToSegment(Point: Vector3, From: Vector3, To: Vector3):
 	if LengthSquared == 0 then
 		return (Point - From).Magnitude
 	end
-
 	local Progress = math.clamp((Point - From):Dot(Segment) / LengthSquared, 0, 1)
 	return (Point - (From + Segment * Progress)).Magnitude
 end
@@ -109,7 +108,6 @@ local function IsInReach(MainCFrame: CFrame, Size: Vector3 | number, Point: Vect
 	if typeof(Size) == "number" then
 		return LocalPoint.Magnitude <= Size * .5 + Tolerance
 	end
-
 	local HalfSize = Size * .5 + Vector3.one * Tolerance
 	return math.abs(LocalPoint.X) <= HalfSize.X and math.abs(LocalPoint.Y) <= HalfSize.Y and math.abs(LocalPoint.Z) <= HalfSize.Z
 end
@@ -144,11 +142,9 @@ function Hitbox:RecordRoot()
 	if not RootPart then
 		return
 	end
-
 	local Now = os.clock()
 	local History: { RootSample } = self.RootHistory
 	table.insert(History, { Time = Now, Position = RootPart.Position })
-
 	while History[1] and Now - History[1].Time > RootHistoryLength do
 		table.remove(History, 1)
 	end
@@ -179,7 +175,6 @@ function Hitbox:TryHit(Victim: Model, MainCFrame: CFrame)
 	if Result == "Ignore" then
 		return
 	end
-
 	table.insert(self.HitVictims, Victim)
 
 	local Callback = if Result == "Blocked" then self.BlockedFunc else self.HitFunc
@@ -190,6 +185,10 @@ function Hitbox:TryHit(Victim: Model, MainCFrame: CFrame)
 end
 
 function Hitbox:ConfirmReport(Victim: Model, VictimRoot: Part, ClientRoot: CFrame, Window: number)
+	if not VictimRoot:IsDescendantOf(workspace) then
+		return
+	end
+
 	local MainCFrame = self:GetCFrameFrom(ClientRoot)
 	if not MainCFrame then
 		return
@@ -202,29 +201,37 @@ function Hitbox:ConfirmReport(Victim: Model, VictimRoot: Part, ClientRoot: CFram
 	self:TryHit(Victim, MainCFrame)
 end
 
-function Hitbox:AwaitCatchUp(ClientRoot: CFrame, Duration: number, OnCaughtUp: () -> ())
+function Hitbox:AwaitCatchUp(Victim: Model, ClientRoot: CFrame, Duration: number, OnCaughtUp: () -> ())
+	if self.PendingReports[Victim] then
+		return
+	end
+
 	local Deadline = os.clock() + Duration
 	local LastPosition: Vector3? = nil
 	local Connection: RBXScriptConnection
 
+	local function StopWaiting()
+		Connection:Disconnect()
+		self.PendingReports[Victim] = nil
+	end
+
 	Connection = RunService.Heartbeat:Connect(function()
 		local RootPart = GetRootPart(self.User)
-		if not self.UUID or not RootPart or os.clock() > Deadline then
-			Connection:Disconnect()
+		if not RootPart or os.clock() > Deadline then
+			StopWaiting()
 			return
 		end
-
 		local Position = RootPart.Position
 		local Distance = GetDistanceToSegment(ClientRoot.Position, LastPosition or Position, Position)
 		LastPosition = Position
 		if Distance > ReachBuffer then
 			return
 		end
-		Connection:Disconnect()
+		StopWaiting()
 		OnCaughtUp()
 	end)
 
-	table.insert(self.PendingReports, Connection)
+	self.PendingReports[Victim] = Connection
 end
 
 function Hitbox:DetectOnServer(LifeTime: number?)
@@ -270,7 +277,7 @@ function Hitbox:DetectOnClient(LifeTime: number?)
 	EnsureReceiver()
 
 	self.RootHistory = {}
-	self.PendingReports = {}
+	self.PendingReports = {} :: { [Model]: RBXScriptConnection }
 	self.Connection = RunService.Heartbeat:Connect(function()
 		self:RecordRoot()
 	end)
@@ -316,6 +323,7 @@ function Hitbox.new(Data: HitboxData)
 		return self
 	end
 	self:DetectOnServer(Data.LifeTime)
+
 	return self
 end
 
@@ -359,7 +367,7 @@ function Hitbox.ReportHit(Player: Player, UUID: string, Victim: Model, ClientRoo
 		return
 	end
 
-	Target:AwaitCatchUp(ClientRoot, math.min(Window + CatchUpBuffer, MaxCatchUp), function()
+	Target:AwaitCatchUp(Victim, ClientRoot, math.min(Window + CatchUpBuffer, MaxCatchUp), function()
 		Target:ConfirmReport(Victim, VictimRoot, ClientRoot, Window)
 	end)
 end
@@ -372,18 +380,26 @@ function Hitbox:OnBlocked(Function: (Model) -> ())
 	self.BlockedFunc = Function
 end
 
+function Hitbox:ResetVictims()
+	table.clear(self.HitVictims)
+end
+
 function Hitbox:Destroy()
 	if not self.UUID then
 		return
 	end
+
 	if self.Connection then
 		self.Connection:Disconnect()
 	end
+
 	for Index, Pending: RBXScriptConnection in self.PendingReports or {} do
 		Pending:Disconnect()
 	end
+
 	ClientStore[self.UUID] = nil
 	HitboxController.Destroy(self.UUID):Fire()
+
 	table.clear(self)
 end
 

@@ -135,6 +135,7 @@ local function DetectHits(Data: DetectData, Reported: { Model })
 	if not MainCFrame then
 		return
 	end
+
 	DrawHitbox(Data.UUID, Data.Size, MainCFrame, ClientColor)
 
 	local HitParts = GetParts(MainCFrame, Data.Size)

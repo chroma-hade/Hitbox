@@ -1,6 +1,6 @@
 [package]
 name = "chroma-hade/hitbox"
-version = "1.0.0"
+version = "1.0.1"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 license = "MIT"
@@ -8,4 +8,4 @@ description = "Hitboxes for Lunora. Run them on the server, or on the attacker's
 exclude = ["Hitbox.rbxm", "aftman.toml"]
 
 [dependencies]
-Lunora = "chroma-hade/lunora@1.0.0"
+Lunora = "chroma-hade/lunora@1.0.3"
