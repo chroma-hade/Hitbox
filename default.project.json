@@ -1,0 +1,6 @@
+{
+	"name": "Hitbox",
+	"tree": {
+		"$path": "src"
+	}
+}
