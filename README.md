@@ -15,7 +15,7 @@ If you use Wally, add both to your `wally.toml`:
 ```toml
 [dependencies]
 Lunora = "chroma-hade/lunora@1.0.3"
-Hitbox = "chroma-hade/hitbox@1.0.1"
+Hitbox = "chroma-hade/hitbox@1.0.2"
 ```
 
 ## Setting it up
@@ -41,7 +41,7 @@ Lunora.Start()
 With Wally, `Packages.Hitbox` is just a link, so the folders sit in `_Index` instead:
 
 ```lua
-local HitboxFolder = ReplicatedStorage.Packages._Index["chroma-hade_hitbox@1.0.1"].hitbox
+local HitboxFolder = ReplicatedStorage.Packages._Index["chroma-hade_hitbox@1.0.2"].hitbox
 Lunora.AddModules(HitboxFolder.Server)
 ```
 

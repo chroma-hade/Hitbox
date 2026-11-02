@@ -198,6 +198,7 @@ function Hitbox:ConfirmReport(Victim: Model, VictimRoot: Part, ClientRoot: CFram
 	if not IsInReach(MainCFrame, self.Size, VictimRoot.Position, VictimTolerance) then
 		return
 	end
+
 	self:TryHit(Victim, MainCFrame)
 end
 
